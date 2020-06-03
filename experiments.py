@@ -18,7 +18,7 @@ def run_mini_batch_size_experiment(dataset_name, train_input, train_target, test
     # For MSE loss the test targets have to be one-hot encoded vectors
     test_target_one_hot = F.one_hot(test_target, num_classes=2 if dataset_name == "circle" else 10).float()
 
-    possible_optimizers = ["adam", "sgd_to_half"]
+    possible_optimizers = ["sgd", "adam", "sgd_to_half"]
     possible_loss_functions = ["mse", "cross_entropy"]
     num_train_samples = train_input.size(0)
     max_mini_batch_size = np.ceil(num_train_samples * 0.9).astype(int)
@@ -62,8 +62,6 @@ def run_mini_batch_size_experiment(dataset_name, train_input, train_target, test
                                training_loss, training_accuracy, training_f1,
                                validation_loss, validation_accuracy, validation_f1, total_training_time,
                                test_loss, test_accuracy, test_f1, converged_at_epoch))
-        if optimizer_algorithm == "adam":
-            print(converged_at_epoch)
         print("Done with {}!".format(experiment_condition))
 
     training_logs = pd.concat(training_logs, axis=0)

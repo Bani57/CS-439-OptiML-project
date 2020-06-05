@@ -101,6 +101,16 @@ class SgdToHalf(torch.optim.Optimizer):
         return self.n > (self.tau + self.burn_in) and self.s[-1] < 0 and self.lr < 1e-10
 
 
+def has_layer(model, layer_type):
+    return any(isinstance(l, layer_type) for l in model.children())
+
+
+def has_batch_norm(model):
+    return has_layer(model, nn.BatchNorm1d) or \
+            has_layer(model, nn.BatchNorm2d) or \
+            has_layer(model, nn.BatchNorm3d)
+
+
 def train_model(dataset_name, train_input, train_target,
                 num_epochs=100, lr=1e-1, mini_batch_size=100,
                 optimizer_algorithm="sgd", loss_function="mse", verbose=False):
@@ -153,6 +163,7 @@ def train_model(dataset_name, train_input, train_target,
     param_values_series = []
     loss_gradients_series = []
     converged_early = False
+    using_batch_norm = has_batch_norm(model)
     tic = time.time()
     training_log = []
     for e in range(num_epochs):
@@ -164,8 +175,12 @@ def train_model(dataset_name, train_input, train_target,
 
         for b in range(0, num_samples, mini_batch_size):
             # Mini-batch loop
-            train_input_mini_batch = train_input[b:min(b + mini_batch_size, num_samples)]
-            train_target_mini_batch = train_target[b:min(b + mini_batch_size, num_samples)]
+            b_end = min(b + mini_batch_size, num_samples)
+            b_start = b
+            if b_end - b == 1 and using_batch_norm:
+                b_start -= 1  # avoid mini-batches of size 1 at the end of an epoch if the model has batch-norm layers
+            train_input_mini_batch = train_input[b_start:b_end]
+            train_target_mini_batch = train_target[b_start:b_end]
             optimizer.zero_grad()
             prediction_mini_batch = model(train_input_mini_batch)
             loss = criterion(prediction_mini_batch, train_target_mini_batch)
@@ -220,7 +235,7 @@ def test_model(model, test_input, test_target, loss_function):
     else:
         criterion = nn.CrossEntropyLoss()
     loss = criterion(prediction, test_target).item()
-    predicted_labels = torch.argmax(prediction, dim=1).cpu()
+    predicted_labels = torch.argmax(prediction, dim=1).cpu().detach()
     if len(test_target.size()) > 1:
         # If target data is in one-hot vector form, revert it back to class labels
         test_target = torch.argmax(test_target, dim=1)

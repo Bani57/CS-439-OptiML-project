@@ -26,7 +26,14 @@ def model_params_and_loss_gradients_to_flat_vector(model_params):
             params_layer_vector, params_layer_grad_vector = params_layer_vector.cpu(), params_layer_grad_vector.cpu()
         params_vector = torch.cat((params_vector, params_layer_vector))
         params_grad_vector = torch.cat((params_grad_vector, params_layer_grad_vector))
-    return params_vector, params_grad_vector
+
+    if params_vector.size(0) > 162:
+        # The MNIST deep model has much more parameters than the circle classifier (78000+ vs. 162),
+        # so the comparison to be equal and to reduce memory complexity,
+        # only keep the values and gradients for the same number of parameters
+        params_vector = params_vector[:162]
+        params_grad_vector = params_grad_vector[:162]
+    return np.array(params_vector), np.array(params_grad_vector)
 
 
 class SgdToHalf(torch.optim.Optimizer):
@@ -195,8 +202,8 @@ def train_model(dataset_name, train_input, train_target,
                                 columns=["DATASET", "OPTIMIZER", "LOSS", "MINI-BATCH SIZE", "LEARNING RATE", "EPOCH",
                                          "AVERAGE TRAINING LOSS", "TRAINING ACCURACY", "TRAINING F1",
                                          "VALIDATION LOSS", "VALIDATION ACCURACY", "VALIDATION F1", "ELAPSED TIME"])
-    param_values_series = torch.stack(param_values_series)
-    loss_gradients_series = torch.stack(loss_gradients_series)
+    param_values_series = np.stack(param_values_series, axis=0)
+    loss_gradients_series = np.stack(loss_gradients_series, axis=0)
     if optimizer_algorithm == "sgd_to_half":
         if verbose:
             print("Final convergence reached at iteration:", optimizer.tau)
@@ -224,12 +231,12 @@ def test_model(model, test_input, test_target, loss_function):
 
 
 def estimate_convergence_threshold_phlug_diagnostic(loss_gradients_series, burn_in=1):
-    num_iterations_performed = loss_gradients_series.size(0)
+    num_iterations_performed = loss_gradients_series.shape[0]
     s_series = [0, ]
     convergence_threshold_set = False
     convergence_threshold = num_iterations_performed
     for n in range(1, num_iterations_performed):
-        s_n = s_series[n - 1] + torch.dot(loss_gradients_series[n], loss_gradients_series[n - 1]).item()
+        s_n = s_series[n - 1] + np.dot(loss_gradients_series[n], loss_gradients_series[n - 1])
         s_series.append(s_n)
         if not convergence_threshold_set and n > burn_in and s_n < 0:
             convergence_threshold = n

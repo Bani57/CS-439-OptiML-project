@@ -9,6 +9,8 @@ def create_circle_classifier():
 class MnistClassifier(nn.Module):
     def __init__(self, mini_batch_size):
         nn.Module.__init__(self)
+        self.mini_batch_size = mini_batch_size
+
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3)
         self.maxp1 = nn.MaxPool2d(kernel_size=2)
         if mini_batch_size > 1:
@@ -26,18 +28,17 @@ class MnistClassifier(nn.Module):
         self.fc2 = nn.Linear(in_features=256, out_features=10)
 
     def forward(self, x):
-        mini_batch_size = x.size(0)
         y = F.relu(self.maxp1(self.conv1(x)))
-        if mini_batch_size > 1:
+        if self.mini_batch_size > 1:
             y = self.bn1(y)
         y = F.relu(self.maxp2(self.conv2(y)))
-        if mini_batch_size > 1:
+        if self.mini_batch_size > 1:
             y = self.bn2(y)
         y = F.relu(self.conv3(y).view(-1, 64))
-        if mini_batch_size > 1:
+        if self.mini_batch_size > 1:
             y = self.bn3(y)
         y = F.relu(self.fc1(y))
-        if mini_batch_size > 1:
+        if self.mini_batch_size > 1:
             y = self.bn4(y)
         y = F.relu(self.fc2(y))
         return y

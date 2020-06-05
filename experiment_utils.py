@@ -81,7 +81,7 @@ class SgdToHalf(torch.optim.Optimizer):
 
         _, g = model_params_and_loss_gradients_to_flat_vector(params)
         if n == 1:
-            self.prev_grad = group["prev_grad"] = torch.clone(g).detach()
+            self.prev_grad = group["prev_grad"] = g.copy()
         else:
             g_prev = group["prev_grad"]
             s += torch.dot(g.view(-1), g_prev.view(-1))
@@ -91,7 +91,7 @@ class SgdToHalf(torch.optim.Optimizer):
                 self.lr = group["lr"] = lr / 2
             self.s.append(s)
             group["s"].append(s)
-            self.prev_grad = group["prev_grad"] = torch.clone(g).detach()
+            self.prev_grad = group["prev_grad"] = g.copy()
 
         self.n = group["n"] = n + 1
 

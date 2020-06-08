@@ -84,7 +84,7 @@ class SgdToHalf(torch.optim.Optimizer):
             self.prev_grad = group["prev_grad"] = g.copy()
         else:
             g_prev = group["prev_grad"]
-            s += torch.dot(g.reshape(-1), g_prev.reshape(-1))
+            s += np.dot(g.reshape(-1), g_prev.reshape(-1))
             if n > (tau + burn_in) and s < 0:
                 self.tau = group["tau"] = n
                 s = 0

@@ -15,6 +15,7 @@ def parse_args():
                         help='Optimization algorithm to be used')
     parser.add_argument('--loss_function', default='all', choices=['all', 'cross_entropy', 'mse'],
                         help='Loss function to be used')
+    parser.add_argument('--data', default='all', choices=['all', 'circle', 'mnist', 'fashion_mnist'])
     parser.add_argument('--silent', default=False, action='store_true')
     return parser.parse_args()
 

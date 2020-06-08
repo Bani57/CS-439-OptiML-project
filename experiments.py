@@ -21,10 +21,10 @@ def run_mini_batch_size_experiment(dataset_name, train_input, train_target, test
     possible_optimizers = ["sgd", "adam", "sgd_to_half"]
     possible_loss_functions = ["mse", "cross_entropy"]
 
-    if config.optimizer != "all":
-        possible_optimizers = [config.optimizer]
-    if config.loss_function != "all":
-        possible_loss_functions = [config.loss_function]
+    if config["optimizer"] != "all":
+        possible_optimizers = [config["optimizer"]]
+    if config["loss_function"] != "all":
+        possible_loss_functions = [config["loss_function"]]
 
     num_train_samples = train_input.size(0)
     max_mini_batch_size = np.ceil(num_train_samples * 0.9).astype(int)

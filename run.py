@@ -53,9 +53,9 @@ def main():
         fashion_mnist_experiment_log, fashion_mnist_training_logs = \
             run_mini_batch_size_experiment("fashion_mnist", fashion_mnist_train_input, fashion_mnist_train_target,
                                            fashion_mnist_test_input, fashion_mnist_test_target)
-        fashion_mnist_experiment_log.to_csv(results_dir + f"fashion_mnist_mini_batch_size_lr_experiment_log_{config.optimizer}_{config.loss_function}.csv",
+        fashion_mnist_experiment_log.to_csv(results_dir + f"fashion_mnist_mini_batch_size_lr_experiment_log_{config['optimizer']}_{config['loss_function']}.csv",
                                             sep=",", header=True, index=False, encoding="utf-8")
-        fashion_mnist_training_logs.to_csv(results_dir + f"fashion_mnist_mini_batch_size_lr_experiment_log_{config.optimizer}_{config.loss_function}.csv",
+        fashion_mnist_training_logs.to_csv(results_dir + f"fashion_mnist_mini_batch_size_lr_experiment_log_{config['optimizer']}_{config['loss_function']}.csv",
                                            sep=",", header=True, index=False, encoding="utf-8")
         print("Done!")
 

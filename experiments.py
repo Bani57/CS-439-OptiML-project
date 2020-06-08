@@ -68,7 +68,7 @@ def run_mini_batch_size_experiment(dataset_name, train_input, train_target, test
                                training_loss, training_accuracy, training_f1,
                                validation_loss, validation_accuracy, validation_f1, total_training_time,
                                test_loss, test_accuracy, test_f1, converged_at_epoch))
-        if not config.silent:
+        if not config["silent"]:
             print("Done with {}!".format(experiment_condition))
 
     training_logs = pd.concat(training_logs, axis=0)

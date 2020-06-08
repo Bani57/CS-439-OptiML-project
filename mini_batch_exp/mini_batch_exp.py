@@ -6,19 +6,19 @@ from torch.optim import SGD, Adam
 from torchvision import datasets
 import time
 import os
-from settings import settings
+from config import config
 from models import MnistClassifier
 
 
 def train_model(model, train, val, mini_batch_size):
-    if not os.path.exists(settings['models_dir']):
-        os.mkdir(settings['models_dir'])
-    if not os.path.exists(settings['logs_dir']):
-        os.mkdir(settings['logs_dir'])
+    if not os.path.exists(config['models_dir']):
+        os.mkdir(config['models_dir'])
+    if not os.path.exists(config['logs_dir']):
+        os.mkdir(config['logs_dir'])
 
-    optimizer_name = settings['optimizer']
-    lr = settings['lr']
-    num_epochs = settings['epochs']
+    optimizer_name = config['optimizer']
+    lr = config['lr']
+    num_epochs = config['epochs']
 
     train_input, train_target = train[0].cuda(), train[1].cuda()
     val_input, val_target = val[0].cuda(), val[1].cuda()
@@ -35,14 +35,14 @@ def train_model(model, train, val, mini_batch_size):
         mini_batch_size = num_samples
 
     log_name = f"mnist_{optimizer_name}_batch{mini_batch_size}_lr{lr}.csv"
-    log_path = os.path.join(settings['logs_dir'], log_name)
+    log_path = os.path.join(config['logs_dir'], log_name)
     header = "epoch, sum_loss, avg_loss, val_loss, val_acc, train_acc, total_time"
     f = open(log_path, "x")
     f.write(header + "\n")
     # print(header)
 
     model_file_name = f"mnist_{optimizer_name}_batch{mini_batch_size}_lr{lr}.pt"
-    model_path = os.path.join(settings['models_dir'], model_file_name)
+    model_path = os.path.join(config['models_dir'], model_file_name)
 
     tic = time.time()
     for e in range(1, num_epochs+1):
@@ -75,7 +75,7 @@ def train_model(model, train, val, mini_batch_size):
         train_acc = test_model(model, train_input, train_target)
 
         f.write(f"{e}, {sum_loss}, {avg_loss}, {val_loss}, {val_acc}, {train_acc}, {running_time}\n")
-        if (e == 1 or e == num_epochs or e % settings['verbosity_mod'] == 0):
+        if (e == 1 or e == num_epochs or e % config['verbosity_mod'] == 0):
             # print(f"{e}, {sum_loss}, {avg_loss}, {val_loss}, {val_acc}, {train_acc}, {running_time}")
             print(f"epoch {e}, batch_size {mini_batch_size}, train_acc {train_acc}, time {running_time}")
 
@@ -107,7 +107,7 @@ def run_mini_batch_experiment(train, val):
     mini_batch_size = 2
     i = 1
     while mini_batch_size < train[0].size(0)
-        if i % settings['num_gpus'] == settings['gpu_id'] or not settings['split_task']:
+        if i % config['num_gpus'] == config['gpu_id'] or not config['split_task']:
             print(f"Training with mini-batch size {mini_batch_size}")
             train_model(MnistClassifier().cuda(), train, val, mini_batch_size=mini_batch_size)
             print()

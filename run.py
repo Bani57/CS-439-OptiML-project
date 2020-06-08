@@ -5,12 +5,12 @@ import torch
 
 from data import generate_circle_classification_dataset, load_mnist_data, load_fashion_mnist_data
 from experiments import run_mini_batch_size_experiment, run_convergence_region_experiment
-from settings import settings
+from config import config
 
 
 def main():
     # Reproducibility
-    seed = settings["seed"]
+    seed = config["seed"]
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -20,14 +20,14 @@ def main():
 
     print("Loading datasets...")
     circle_train_input, circle_train_target, \
-        circle_test_input, circle_test_target = generate_circle_classification_dataset()
+    circle_test_input, circle_test_target = generate_circle_classification_dataset()
     mnist_train_input, mnist_train_target, mnist_test_input, mnist_test_target = load_mnist_data()
     fashion_mnist_train_input, fashion_mnist_train_target, \
-        fashion_mnist_test_input, fashion_mnist_test_target = load_fashion_mnist_data()
+    fashion_mnist_test_input, fashion_mnist_test_target = load_fashion_mnist_data()
     print("Done!")
 
-    results_dir = settings["results_dir"]
-    plots_dir = settings["plots_dir"]
+    results_dir = config["results_dir"]
+    plots_dir = config["plots_dir"]
 
     # Boolean variable, whether to run the mini-batch size and learning rate experiment or was it already completed
     run_mini_batch_size_lr_experiments = True
@@ -53,9 +53,9 @@ def main():
         fashion_mnist_experiment_log, fashion_mnist_training_logs = \
             run_mini_batch_size_experiment("fashion_mnist", fashion_mnist_train_input, fashion_mnist_train_target,
                                            fashion_mnist_test_input, fashion_mnist_test_target)
-        fashion_mnist_experiment_log.to_csv(results_dir + "fashion_mnist_mini_batch_size_lr_experiment_log.csv",
+        fashion_mnist_experiment_log.to_csv(results_dir + f"fashion_mnist_mini_batch_size_lr_experiment_log_{config.optimizer}_{config.loss_function}.csv",
                                             sep=",", header=True, index=False, encoding="utf-8")
-        fashion_mnist_training_logs.to_csv(results_dir + "fashion_mnist_mini_batch_size_lr_training_logs.csv",
+        fashion_mnist_training_logs.to_csv(results_dir + f"fashion_mnist_mini_batch_size_lr_experiment_log_{config.optimizer}_{config.loss_function}.csv",
                                            sep=",", header=True, index=False, encoding="utf-8")
         print("Done!")
 

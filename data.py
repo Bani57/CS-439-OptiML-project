@@ -2,10 +2,10 @@ import numpy as np
 import torch
 from torchvision import datasets
 from sklearn.model_selection import train_test_split
-from settings import settings
+from config import config
 
-seed = settings["seed"]
-data_dir = settings["data_dir"]
+seed = config["seed"]
+data_dir = config["data_dir"]
 reduced_data_size = True
 
 

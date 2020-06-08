@@ -5,7 +5,7 @@ from torch.nn import functional as F
 from experiment_utils import train_model, test_model, \
     estimate_convergence_threshold_phlug_diagnostic, estimate_convergence_region
 from plotting import visualize_convergence_region
-from settings import settings
+from config import config
 
 gpu_available = torch.cuda.is_available()
 
@@ -20,6 +20,12 @@ def run_mini_batch_size_experiment(dataset_name, train_input, train_target, test
 
     possible_optimizers = ["sgd", "adam", "sgd_to_half"]
     possible_loss_functions = ["mse", "cross_entropy"]
+
+    if config.optimizer != "all":
+        possible_optimizers = [config.optimizer]
+    if config.loss_function != "all":
+        possible_loss_functions = [config.loss_function]
+
     num_train_samples = train_input.size(0)
     max_mini_batch_size = np.ceil(num_train_samples * 0.9).astype(int)
     possible_mini_batch_sizes = np.unique(np.ceil(np.geomspace(1, max_mini_batch_size, 100)).astype(int))
@@ -62,7 +68,8 @@ def run_mini_batch_size_experiment(dataset_name, train_input, train_target, test
                                training_loss, training_accuracy, training_f1,
                                validation_loss, validation_accuracy, validation_f1, total_training_time,
                                test_loss, test_accuracy, test_f1, converged_at_epoch))
-        print("Done with {}!".format(experiment_condition))
+        if not config.silent:
+            print("Done with {}!".format(experiment_condition))
 
     training_logs = pd.concat(training_logs, axis=0)
     experiment_log = pd.DataFrame(experiment_log,
@@ -101,7 +108,7 @@ def run_convergence_region_experiment(dataset_name, train_input, train_target,
             _, diagnostic_data = estimate_convergence_threshold_phlug_diagnostic(param_grad_data, burn_in=1)
             simulations_param_value_data.append(param_value_data)
             simulations_diagnostic_data.append(diagnostic_data)
-            if (i + 1) % settings["verbosity_mod"] == 0 or i in (0, num_simulations - 1):
+            if (i + 1) % config["verbosity_mod"] == 0 or i in (0, num_simulations - 1):
                 print("Done with {}% of simulations!".format(round(100 * (i + 1) / num_simulations, 4)))
         simulations_param_value_data = np.vstack(simulations_param_value_data)
         simulations_diagnostic_data = np.concatenate(simulations_diagnostic_data)
@@ -114,7 +121,7 @@ def run_convergence_region_experiment(dataset_name, train_input, train_target,
 
         plot_filename = "convergence_region_{}_{}_{}.png".format(dataset_name, optimizer_algorithm, loss_function)
         visualize_convergence_region(simulations_param_value_data, simulations_diagnostic_data,
-                                     convergence_region_params, plot_path=settings["plots_dir"] + plot_filename)
+                                     convergence_region_params, plot_path=config["plots_dir"] + plot_filename)
 
         print("Done with {}!".format(experiment_condition))
 

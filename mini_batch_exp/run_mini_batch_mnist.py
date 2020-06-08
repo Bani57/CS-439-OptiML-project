@@ -6,7 +6,7 @@ from torch.optim import SGD, Adam
 from torchvision import datasets
 import time
 import os
-from settings import settings
+from config import config
 from mini_batch_exp import run_mini_batch_experiment
 
 def print_settings(params):
@@ -18,14 +18,14 @@ def main():
     torch.manual_seed(1)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    torch.cuda.set_device(f"cuda:{settings['gpu_id']}")
+    torch.cuda.set_device(f"cuda:{config['gpu_id']}")
 
-    if not settings['hide_settings']:
+    if not config['hide_settings']:
         print('Settings:')
-        print_settings(settings)
+        print_settings(config)
         print()
 
-    mnist_dir = os.path.join(settings['data_dir'], 'mnist')
+    mnist_dir = os.path.join(config['data_dir'], 'mnist')
 
     mnist_train_raw = datasets.MNIST(mnist_dir, train=True, download=True)
     mnist_test_raw = datasets.MNIST(mnist_dir, train=False, download=True)

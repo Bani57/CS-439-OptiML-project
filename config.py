@@ -11,10 +11,13 @@ def parse_args():
     parser.add_argument('--split_task', default=True, action='store_true',
                         help='Execute only a subset of the experiments based on the GPU id.'
                              'Can be used to split tasks between GPUs.')
-    parser.add_argument('--verbosity_mod', type=int, default=10)
-    parser.add_argument('--hide_settings', default=False, action='store_true')
+    parser.add_argument('--optimizer', default='all', choices=['all', 'adam', 'sgd', 'sgd_to_half'],
+                        help='Optimization algorithm to be used')
+    parser.add_argument('--loss_function', default='all', choices=['all', 'cross_entropy', 'mse'],
+                        help='Loss function to be used')
+    parser.add_argument('--silent', default=False, action='store_true')
     return parser.parse_args()
 
 
 args = parse_args()
-settings = vars(args)
+config = vars(args)

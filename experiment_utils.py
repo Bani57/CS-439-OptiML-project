@@ -8,10 +8,10 @@ from torch.optim import SGD, Adam
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 from models import create_circle_classifier, MnistClassifier
-from settings import settings
+from config import config
 
 gpu_available = torch.cuda.is_available()
-seed = settings["seed"]
+seed = config["seed"]
 
 
 def model_params_and_loss_gradients_to_flat_vector(model_params):
@@ -155,7 +155,7 @@ def train_model(dataset_name, train_input, train_target,
         train_input, train_target = train_input.cuda(), train_target.cuda()
         val_input, val_target = val_input.cuda(), val_target.cuda()
         model = model.cuda()
-        if settings["num_gpus"] > 1 and settings["split_task"]:
+        if config["num_gpus"] > 1 and config["split_task"]:
             model = nn.DataParallel(model)
         criterion = criterion.cuda()
 
@@ -210,7 +210,7 @@ def train_model(dataset_name, train_input, train_target,
                              average_training_loss, train_accuracy, train_f1,
                              validation_loss, validation_accuracy, validation_f1, elapsed_time))
 
-        if verbose and ((e + 1) % settings["verbosity_mod"] == 0 or e in (0, num_epochs - 1)):
+        if verbose and ((e + 1) % config["verbosity_mod"] == 0 or e in (0, num_epochs - 1)):
             print("Epoch {}, Loss: {}, Elapsed Time: {} sec".format(e + 1, average_training_loss, elapsed_time))
 
     training_log = pd.DataFrame(training_log,

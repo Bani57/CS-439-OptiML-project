@@ -5,6 +5,7 @@ import torch
 
 from data import generate_circle_classification_dataset, load_mnist_data, load_fashion_mnist_data
 from experiments import run_mini_batch_size_experiment, run_convergence_region_experiment
+from experiment_utils import compute_combined_score_for_experiment_conditions, extract_optimal_parameters_from_experiment_log
 from settings import settings
 
 
@@ -67,14 +68,11 @@ def main():
         fashion_mnist_experiment_log = pd.read_csv(results_dir + "fashion_mnist_mini_batch_size_lr_experiment_log.csv",
                                                    sep=",", header=0, index_col=None, encoding="utf-8")
 
-    def extract_optimal_parameters_from_experiment_log(experiment_log):
-        optimal_values_indices = experiment_log[experiment_log["CONVERGED AT EPOCH"] < 100] \
-            .groupby(["DATASET", "OPTIMIZER", "LOSS"])["TEST F1"].idxmax()
-        optimal_values = experiment_log.loc[optimal_values_indices, ["MINI-BATCH SIZE", "LEARNING RATE"]]
-        optimal_values.index = optimal_values_indices.index
-        optimal_values = optimal_values.to_dict()
-        best_mini_batch_sizes, best_lrs = optimal_values["MINI-BATCH SIZE"], optimal_values["LEARNING RATE"]
-        return best_mini_batch_sizes, best_lrs
+    print("Computing combined score for experiment conditions...")
+    circle_experiment_log = compute_combined_score_for_experiment_conditions(circle_experiment_log)
+    mnist_experiment_log = compute_combined_score_for_experiment_conditions(mnist_experiment_log)
+    fashion_mnist_experiment_log = compute_combined_score_for_experiment_conditions(fashion_mnist_experiment_log)
+    print("Done!")
 
     print("Finding optimal mini-batch sizes and learning rates...")
     circle_best_mini_batch_sizes, circle_best_lrs = \

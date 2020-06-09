@@ -5,6 +5,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.optim import SGD, Adam
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 from models import create_circle_classifier, MnistClassifier
@@ -258,6 +259,23 @@ def estimate_convergence_threshold_phlug_diagnostic(loss_gradients_series, burn_
             convergence_threshold_set = True
     s_series = np.array(s_series)
     return convergence_threshold, s_series
+
+
+def compute_combined_score_for_experiment_conditions(experiment_log):
+    normalizer = StandardScaler()
+    normalized_measures = normalizer.fit_transform(experiment_log[["TEST F1", "TOTAL TRAINING TIME"]])
+    experiment_log["COMBINED SCORE"] = normalized_measures[:, 0] - normalized_measures[:, 1]
+    return experiment_log
+
+
+def extract_optimal_parameters_from_experiment_log(experiment_log):
+    optimal_values_indices = experiment_log[experiment_log["CONVERGED AT EPOCH"] < 100] \
+        .groupby(["DATASET", "OPTIMIZER", "LOSS"])["COMBINED SCORE"].idxmax()
+    optimal_values = experiment_log.loc[optimal_values_indices, ["MINI-BATCH SIZE", "LEARNING RATE"]]
+    optimal_values.index = optimal_values_indices.index
+    optimal_values = optimal_values.to_dict()
+    best_mini_batch_sizes, best_lrs = optimal_values["MINI-BATCH SIZE"], optimal_values["LEARNING RATE"]
+    return best_mini_batch_sizes, best_lrs
 
 
 def estimate_convergence_region(simulations_param_value_data, simulations_diagnostic_data):

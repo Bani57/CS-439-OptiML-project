@@ -5,7 +5,8 @@ import torch
 
 from data import generate_circle_classification_dataset, load_mnist_data, load_fashion_mnist_data
 from experiments import run_mini_batch_size_experiment, run_convergence_region_experiment
-from experiment_utils import compute_combined_score_for_experiment_conditions, extract_optimal_parameters_from_experiment_log
+from experiment_utils import compute_combined_score_for_experiment_conditions, \
+    extract_optimal_parameters_from_experiment_log
 from settings import settings
 
 
@@ -28,10 +29,10 @@ def main():
     print("Done!")
 
     results_dir = settings["results_dir"]
-    plots_dir = settings["plots_dir"]
 
     # Boolean variable, whether to run the mini-batch size and learning rate experiment or was it already completed
-    run_mini_batch_size_lr_experiments = True
+    # WARNING: Takes a very long time
+    run_mini_batch_size_lr_experiments = False
 
     if run_mini_batch_size_lr_experiments:
         print("Running the mini-batch size and learning rate experiments...")
@@ -84,7 +85,8 @@ def main():
     print("Done!")
 
     # Boolean variable, whether to run the convergence region experiment or was it already completed
-    run_convergence_region_experiments = True
+    # WARNING: Takes a long time
+    run_convergence_region_experiments = False
 
     if run_convergence_region_experiments:
         print("Running the convergence region experiments...")
@@ -103,13 +105,23 @@ def main():
                                               fashion_mnist_best_mini_batch_sizes, fashion_mnist_best_lrs)
         fashion_mnist_experiment_log.to_csv(results_dir + "fashion_mnist_convergence_region_experiment_log.csv",
                                             sep=",", header=True, index=False, encoding="utf-8")
+        print("Done!")
     else:
+        print("Loading the second experiment logs...")
         circle_experiment_log = pd.read_csv(results_dir + "circle_convergence_region_experiment_log.csv",
                                             sep=",", header=0, index_col=None, encoding="utf-8")
         mnist_experiment_log = pd.read_csv(results_dir + "mnist_convergence_region_experiment_log.csv",
                                            sep=",", header=0, index_col=None, encoding="utf-8")
-        fashion_mnist_experiment_log = pd.read_csv(results_dir + "fashion_mnist__convergence_region_experiment_log.csv",
+        fashion_mnist_experiment_log = pd.read_csv(results_dir + "fashion_mnist_convergence_region_experiment_log.csv",
                                                    sep=",", header=0, index_col=None, encoding="utf-8")
+        print("Done!")
+
+    print("Generating the plots for the second experiment...")
+    experiment_log = merge_experiment_data_from_different_datasets(circle_experiment_log,
+                                                                   mnist_experiment_log,
+                                                                   fashion_mnist_experiment_log)
+    visualize_results_second_experiment(experiment_log)
+    print("Done!")
 
 
 if __name__ == "__main__":

@@ -22,8 +22,8 @@ def run_mini_batch_size_experiment(dataset_name, train_input, train_target, test
     possible_loss_functions = ["mse", "cross_entropy"]
     num_train_samples = train_input.size(0)
     max_mini_batch_size = np.ceil(num_train_samples * 0.9).astype(int)
-    possible_mini_batch_sizes = np.unique(np.ceil(np.geomspace(1, max_mini_batch_size, 100)).astype(int))
-    possible_learning_rates = np.geomspace(0.01, 1, 15)
+    possible_mini_batch_sizes = np.unique(np.ceil(np.geomspace(1, max_mini_batch_size, 50)).astype(int))
+    possible_learning_rates = np.geomspace(0.01, 1, 10)
     optimizer_lr_factor = {"sgd": 1, "adam": 0.05, "sgd_to_half": 5}
     loss_lr_factor = {"mse": 5, "cross_entropy": 1}
     possible_experiment_conditions = [(dataset_name, optimizer_algorithm, loss_function, mini_batch_size,
@@ -114,7 +114,8 @@ def run_convergence_region_experiment(dataset_name, train_input, train_target,
 
         plot_filename = "convergence_region_{}_{}_{}.png".format(dataset_name, optimizer_algorithm, loss_function)
         visualize_convergence_region(simulations_param_value_data, simulations_diagnostic_data,
-                                     convergence_region_params, plot_path=settings["plots_dir"] + plot_filename)
+                                     convergence_region_params,
+                                     plot_path=settings["plots_dir"] + "convergence_regions/" + plot_filename)
 
         print("Done with {}!".format(experiment_condition))
 

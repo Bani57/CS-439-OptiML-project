@@ -1,10 +1,7 @@
-import numpy as np
-import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.patches import Ellipse
 import seaborn as sns
 
-sns.set_style("darkgrid")
 sns.set(style="darkgrid", context="paper")
 
 

@@ -85,7 +85,7 @@ class SgdToHalf(torch.optim.Optimizer):
             self.prev_grad = group["prev_grad"] = g.copy()
         else:
             g_prev = group["prev_grad"]
-            s += torch.dot(g.reshape(-1), g_prev.reshape(-1))
+            s += np.dot(g.reshape(-1), g_prev.reshape(-1))
             if n > (tau + burn_in) and s < 0:
                 self.tau = group["tau"] = n
                 s = 0
@@ -156,8 +156,6 @@ def train_model(dataset_name, train_input, train_target,
         train_input, train_target = train_input.cuda(), train_target.cuda()
         val_input, val_target = val_input.cuda(), val_target.cuda()
         model = model.cuda()
-        if settings["num_gpus"] > 1 and settings["split_task"]:
-            model = nn.DataParallel(model)
         criterion = criterion.cuda()
 
     num_samples = train_input.size(0)
@@ -273,6 +271,7 @@ def extract_optimal_parameters_from_experiment_log(experiment_log):
         .groupby(["DATASET", "OPTIMIZER", "LOSS"])["COMBINED SCORE"].idxmax()
     optimal_values = experiment_log.loc[optimal_values_indices, ["MINI-BATCH SIZE", "LEARNING RATE"]]
     optimal_values.index = optimal_values_indices.index
+    print(optimal_values)
     optimal_values = optimal_values.to_dict()
     best_mini_batch_sizes, best_lrs = optimal_values["MINI-BATCH SIZE"], optimal_values["LEARNING RATE"]
     return best_mini_batch_sizes, best_lrs

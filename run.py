@@ -7,6 +7,7 @@ from data import generate_circle_classification_dataset, load_mnist_data, load_f
 from experiments import run_mini_batch_size_experiment, run_convergence_region_experiment
 from experiment_utils import compute_combined_score_for_experiment_conditions, \
     extract_optimal_parameters_from_experiment_log
+from plotting import visualize_results_first_experiment, visualize_results_second_experiment
 from settings import settings
 
 
@@ -64,10 +65,16 @@ def main():
     else:
         circle_experiment_log = pd.read_csv(results_dir + "circle_mini_batch_size_lr_experiment_log.csv",
                                             sep=",", header=0, index_col=None, encoding="utf-8")
+        circle_training_logs = pd.read_csv(results_dir + "circle_mini_batch_size_lr_training_logs.csv",
+                                           sep=",", header=0, index_col=None, encoding="utf-8")
         mnist_experiment_log = pd.read_csv(results_dir + "mnist_mini_batch_size_lr_experiment_log.csv",
                                            sep=",", header=0, index_col=None, encoding="utf-8")
+        mnist_training_logs = pd.read_csv(results_dir + "mnist_mini_batch_size_lr_training_logs.csv",
+                                          sep=",", header=0, index_col=None, encoding="utf-8")
         fashion_mnist_experiment_log = pd.read_csv(results_dir + "fashion_mnist_mini_batch_size_lr_experiment_log.csv",
                                                    sep=",", header=0, index_col=None, encoding="utf-8")
+        fashion_mnist_training_logs = pd.read_csv(results_dir + "fashion_mnist_mini_batch_size_lr_training_logs.csv",
+                                                  sep=",", header=0, index_col=None, encoding="utf-8")
 
     print("Computing combined score for experiment conditions...")
     circle_experiment_log = compute_combined_score_for_experiment_conditions(circle_experiment_log)
@@ -82,6 +89,29 @@ def main():
         extract_optimal_parameters_from_experiment_log(mnist_experiment_log)
     fashion_mnist_best_mini_batch_sizes, fashion_mnist_best_lrs = \
         extract_optimal_parameters_from_experiment_log(fashion_mnist_experiment_log)
+    print("Done!")
+
+    def merge_experiment_data_from_different_datasets(circle_data, mnist_data, fashion_mnist_data):
+        """
+        Helper function to merge experiment results from the different datasets into one combined log
+
+        :param circle_data: results from an experiment on the 2D circle dataset, pandas.Dataframe
+        :param mnist_data: results from an experiment on the MNIST dataset, pandas.Dataframe
+        :param fashion_mnist_data: results from an experiment on the FashionMNIST dataset, pandas.Dataframe
+
+        :returns: merged experiment log, pandas.Dataframe
+        """
+
+        return pd.concat((circle_data, mnist_data, fashion_mnist_data), axis=0, ignore_index=True)
+
+    print("Generating the plots for the first experiment...")
+    experiment_log = merge_experiment_data_from_different_datasets(circle_experiment_log,
+                                                                   mnist_experiment_log,
+                                                                   fashion_mnist_experiment_log)
+    training_logs = merge_experiment_data_from_different_datasets(circle_training_logs,
+                                                                  mnist_training_logs,
+                                                                  fashion_mnist_training_logs)
+    visualize_results_first_experiment(experiment_log, training_logs)
     print("Done!")
 
     # Boolean variable, whether to run the convergence region experiment or was it already completed

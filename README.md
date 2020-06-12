@@ -8,15 +8,14 @@ In this paper, we present our research on the topic of optimization algorithms f
 ```
 │   data.py - Module containing the code for loading the datasets
 │   experiments.py - Module containing the main code for executing the experiments
-│   experiment_utils.py - Module containing helper functions for executing procedures
-						  require
+│   experiment_utils.py - Module containing helper functions for executing procedures required for the experiments
 │   models.py - Module containing code required to instantiate the shallow and deep model
 │   plotting.py - Module containing functions for generating the visualizations of the experiment results
 │   report.pdf - Detailed project report
 │   run.py - Main script - contains the code to run the experiments
-						   and generate the figures using the obtained results
+			   and generate the figures using the obtained results
 │   settings.py - Module containing the implementation of the procedure
-				  required to parse the command line arguments
+		  required to parse the command line arguments
 │
 ├───results
 │   │   circle_convergence_region_experiment_log.csv

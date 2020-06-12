@@ -1,3 +1,5 @@
+""" Main script - contains the code to run the experiments and generate the figures using the obtained results """
+
 import random
 import numpy as np
 import pandas as pd
@@ -63,6 +65,7 @@ def main():
         print("Done!")
 
     else:
+        print("Loading the first experiment logs...")
         circle_experiment_log = pd.read_csv(results_dir + "circle_mini_batch_size_lr_experiment_log.csv",
                                             sep=",", header=0, index_col=None, encoding="utf-8")
         circle_training_logs = pd.read_csv(results_dir + "circle_mini_batch_size_lr_training_logs.csv",
@@ -75,6 +78,7 @@ def main():
                                                    sep=",", header=0, index_col=None, encoding="utf-8")
         fashion_mnist_training_logs = pd.read_csv(results_dir + "fashion_mnist_mini_batch_size_lr_training_logs.csv",
                                                   sep=",", header=0, index_col=None, encoding="utf-8")
+        print("Done!")
 
     print("Computing combined score for experiment conditions...")
     circle_experiment_log = compute_combined_score_for_experiment_conditions(circle_experiment_log)

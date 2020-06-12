@@ -1,3 +1,5 @@
+""" Module containing the main code for executing the experiments """
+
 import numpy as np
 import pandas as pd
 import torch
@@ -11,6 +13,19 @@ gpu_available = torch.cuda.is_available()
 
 
 def run_mini_batch_size_experiment(dataset_name, train_input, train_target, test_input, test_target):
+    """
+    Function to run the first experiment procedure
+
+    :param dataset_name: name of the dataset used for training, string
+    :param train_input: training input data, torch.Tensor of size (1000, `num_features`)
+    :param train_target: training target data, torch.Tensor of size 1000
+    :param test_input: testing input data, torch.Tensor of size (1000, `num_features`)
+    :param test_target: testing target data, torch.Tensor of size 1000
+
+    :returns: experiment log, pandas.Dataframe
+              + detailed training logs, pandas.Dataframe
+    """
+
     if gpu_available:
         # If a GPU and CUDA are available, transfer the test data to it, for efficient computation
         test_input, test_target = test_input.cuda(), test_target.cuda()
@@ -76,6 +91,19 @@ def run_mini_batch_size_experiment(dataset_name, train_input, train_target, test
 
 def run_convergence_region_experiment(dataset_name, train_input, train_target,
                                       mini_batch_sizes, lrs, num_simulations=1000):
+    """
+    Function to run the second experiment procedure
+
+    :param dataset_name: name of the dataset used for training, string
+    :param train_input: training input data, torch.Tensor of size (1000, `num_features`)
+    :param train_target: training target data, torch.Tensor of size 1000
+    :param mini_batch_sizes: dictionary {(dataset, optimizer, loss): optimal mini-batch size}
+    :param lrs: dictionary {(dataset, optimizer, loss): optimal learning rate}
+    :param num_simulations: number of training simulations to run, positive int, optional, default value is 1000
+
+    :returns: experiment log, pandas.Dataframe
+    """
+
     possible_optimizers = ["sgd", "adam", "sgd_to_half"]
     possible_loss_functions = ["mse", "cross_entropy"]
     possible_experiment_conditions = [(dataset_name, optimizer_algorithm, loss_function)

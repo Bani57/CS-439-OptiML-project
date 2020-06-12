@@ -1,3 +1,6 @@
+""" Module containing helper functions for executing procedures required for the experiments """
+
+
 import time
 import numpy as np
 import pandas as pd
@@ -16,6 +19,14 @@ seed = settings["seed"]
 
 
 def model_params_and_loss_gradients_to_flat_vector(model_params):
+    """
+    Helper function to convert the collection of model parameter values and gradients into 1D vectors
+
+    :param model_params: output from torch.Module.parameters()
+
+    :returns: tuple of 2 vectors, (vector of parameter values, vector of parameter gradients)
+    """
+
     params_vector = torch.Tensor()
     params_grad_vector = torch.Tensor()
     for param in model_params:
@@ -38,6 +49,10 @@ def model_params_and_loss_gradients_to_flat_vector(model_params):
 
 
 class SgdToHalf(torch.optim.Optimizer):
+    """
+    Class containing the implementation of the SGD^(1/2) optimizer, inherits torch.optim.Optimizer
+    """
+
     def __init__(self, params, lr, burn_in=1):
         self.params = params
         self.lr = lr
@@ -66,6 +81,7 @@ class SgdToHalf(torch.optim.Optimizer):
             with torch.enable_grad():
                 loss = closure()
 
+        # Extract current hyperparameter values
         group = self.param_groups[0]
         lr = group["lr"]
         burn_in = group["burn_in"]
@@ -73,6 +89,7 @@ class SgdToHalf(torch.optim.Optimizer):
         s = float(group["s"][-1])
         tau = group["tau"]
 
+        # Extract model parameters and perform the gradient update
         params = group["params"]
         for p in params:
             if p.grad is None:
@@ -80,6 +97,7 @@ class SgdToHalf(torch.optim.Optimizer):
             g_p = p.grad
             p.add_(g_p, alpha=-lr)
 
+        # Convergence test
         _, g = model_params_and_loss_gradients_to_flat_vector(params)
         if n == 1:
             self.prev_grad = group["prev_grad"] = g.copy()
@@ -99,22 +117,71 @@ class SgdToHalf(torch.optim.Optimizer):
         return loss
 
     def converged(self):
+        """
+        Perform the final convergence check, whether to complete stop the procedure
+
+        :returns: whether to complete stop the procedure, boolean
+        """
+
         return self.n > (self.tau + self.burn_in) and self.s[-1] < 0 and self.lr < 1e-10
 
 
 def has_layer(model, layer_type):
-    return any(isinstance(l, layer_type) for l in model.children())
+    """
+    Helper function to check whether a PyTorch model contains a specific layer type
+
+    :param model: PyTorch model, torch.nn.Module object
+    :param layer_type: PyTorch layer class, class name inheriting torch.nn.Module
+
+    :returns: whether the model contains the layer, boolean
+    """
+
+    return any(isinstance(layer, layer_type) for layer in model.children())
 
 
 def has_batch_norm(model):
-    return has_layer(model, nn.BatchNorm1d) or \
-            has_layer(model, nn.BatchNorm2d) or \
-            has_layer(model, nn.BatchNorm3d)
+    """
+    Helper function to check whether a PyTorch model contains a batch normalization layer
+
+    :param model: PyTorch model, torch.nn.Module object
+
+    :returns: whether the model contains a BatchNorm layer, boolean
+    """
+
+    return has_layer(model, nn.BatchNorm1d) or has_layer(model, nn.BatchNorm2d) or has_layer(model, nn.BatchNorm3d)
 
 
 def train_model(dataset_name, train_input, train_target,
                 num_epochs=100, lr=1e-1, mini_batch_size=100,
                 optimizer_algorithm="sgd", loss_function="mse", verbose=False):
+    """
+    Function that implements the generalized training procedure
+
+    :param dataset_name: name of the dataset used for training, string
+    :param train_input: training input data, torch.Tensor of size (1000, `num_features`)
+    :param train_target: training target data, torch.Tensor of size 1000
+    :param num_epochs: maximum number of epochs for running the training, positive int, optional, default value is 100
+    :param lr: learning rate, positive float
+    :param mini_batch_size: number of samples per mini-batch, int in [1, 900]
+    :param optimizer_algorithm: name of the optimization algorithm, string
+    :param loss_function: name of the loss criterion, string
+    :param verbose: whether to print progress messages, boolean, optional, default is False
+
+    :raises ValueError:
+        - if an invalid value has been passed for the dataset name,
+          supported values are `circle`, `mnist` and `fashion_mnist`
+        - if an invalid value has been passed for the optimization algorithm name,
+          supported values are `sgd`, `adam` and `sgd_to_half`
+        - if an invalid value has been passed for the loss function name,
+          supported values are `mse` and `cross_entropy`
+
+    :returns: trained model, torch.nn.Module
+              + training log, pandas.Dataframe
+              + series of parameter values, numpy.array of shape (`num_iterations`, 162)
+              + series of parameter gradient values, numpy.array of shape (`num_iterations`, 162)
+              + estimated iteration where convergence was reached, positive int if SGD^(1/2) else None
+    """
+
     if dataset_name == "circle":
         model = create_circle_classifier()
     elif dataset_name in ("mnist", "fashion_mnist"):
@@ -228,6 +295,17 @@ def train_model(dataset_name, train_input, train_target,
 
 
 def test_model(model, test_input, test_target, loss_function):
+    """
+    Helper function to evaluate a model on independent test data
+
+    :param model: PyTorch model, torch.nn.Module object
+    :param test_input: testing input data, torch.Tensor of size (1000, `num_features`)
+    :param test_target: testing target data, torch.Tensor of size 1000
+    :param loss_function: loss criterion used during training, string
+
+    :returns: tuple of 3 floats, (loss value, accuracy, f1 score)
+    """
+
     prediction = model(test_input)
     if loss_function == "mse":
         criterion = nn.MSELoss()
@@ -245,6 +323,16 @@ def test_model(model, test_input, test_target, loss_function):
 
 
 def estimate_convergence_threshold_phlug_diagnostic(loss_gradients_series, burn_in=1):
+    """
+    Function that implements the algorithm for calculating Phlug's diagnostic
+
+    :param loss_gradients_series: series of parameter gradient values, numpy.array of shape (`num_iterations`, 162)
+    :param burn_in: how many initial iterations to disregard, positive int, optional, default
+
+    :returns: estimated iteration where convergence was reached, positive int
+              + series of values of the diagnostic, numpy.array of length `num_iterations`
+    """
+
     num_iterations_performed = loss_gradients_series.shape[0]
     s_series = [0, ]
     convergence_threshold_set = False
@@ -260,6 +348,14 @@ def estimate_convergence_threshold_phlug_diagnostic(loss_gradients_series, burn_
 
 
 def compute_combined_score_for_experiment_conditions(experiment_log):
+    """
+    Helper function to compute the combined score for the experiment conditions using the first experiment data
+
+    :param experiment_log: first experiment log, pandas.Dataframe
+
+    :returns: experiment log updated with the combined score, pandas.Dataframe
+    """
+
     normalizer = StandardScaler()
     normalized_measures = normalizer.fit_transform(experiment_log[["TEST F1", "TOTAL TRAINING TIME"]])
     experiment_log["COMBINED SCORE"] = normalized_measures[:, 0] - normalized_measures[:, 1]
@@ -267,6 +363,16 @@ def compute_combined_score_for_experiment_conditions(experiment_log):
 
 
 def extract_optimal_parameters_from_experiment_log(experiment_log):
+    """
+    Function to find the optimal mini-batch size and learning rate for each experiment condition,
+    using the results from the first experiment, as maximizers of the combined score
+
+    :param experiment_log: first experiment log, pandas.Dataframe
+
+    :returns: dictionary {(dataset, optimizer, loss): optimal mini-batch size}
+              + dictionary {(dataset, optimizer, loss): optimal learning rate}
+    """
+
     optimal_values_indices = experiment_log[experiment_log["CONVERGED AT EPOCH"] < 100] \
         .groupby(["DATASET", "OPTIMIZER", "LOSS"])["COMBINED SCORE"].idxmax()
     optimal_values = experiment_log.loc[optimal_values_indices, ["MINI-BATCH SIZE", "LEARNING RATE"]]
@@ -278,6 +384,16 @@ def extract_optimal_parameters_from_experiment_log(experiment_log):
 
 
 def estimate_convergence_region(simulations_param_value_data, simulations_diagnostic_data):
+    """
+    Function to estimate the convergence region as an ellipse using the data from the second experiment
+
+    :param simulations_param_value_data: parameter value data from the 1000 simulations, torch.Tensor
+    :param simulations_diagnostic_data: diagnostic value data from the 1000 simulations, torch.Tensor
+
+    :returns: tuple of 4 floats, (x-coordinate of center, y-coordinate of center,
+                                  horizontal diameter length, vertical diameter length)
+    """
+
     simulations_param_value_data_two_params = simulations_param_value_data[:, :2]
     simulations_diagnostic_converged_data = (simulations_diagnostic_data < 0).reshape(-1, 1)
     data = np.hstack((simulations_param_value_data_two_params, simulations_diagnostic_converged_data))

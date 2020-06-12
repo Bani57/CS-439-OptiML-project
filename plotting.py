@@ -1,3 +1,5 @@
+""" Module containing functions for generating the visualizations of the experiment results """
+
 from matplotlib import pyplot as plt
 from matplotlib.patches import Ellipse
 import seaborn as sns
@@ -12,6 +14,18 @@ colormap[0], colormap[1] = colormap[1], colormap[0]
 
 def visualize_convergence_region(simulations_param_data, simulations_diagnostic_data,
                                  convergence_region_params, plot_path):
+    """
+    Function to generate the plot of a convergence region using the data from the second experiment
+
+    :param simulations_param_data: parameter value data from 1000 simulations, torch.Tensor
+    :param simulations_diagnostic_data: diagnostic value data from 1000 simulations, torch.Tensor
+    :param convergence_region_params: ellipse parameters, tuple of 4 floats (x-coordinate of center,
+                                                                             y-coordinate of center,
+                                                                             horizontal diameter length,
+                                                                             vertical diameter length)
+    :param plot_path: local filepath where to save the plot, string
+    """
+
     simulations_diagnostic_converged_data = simulations_diagnostic_data < 0
     conv_ell_x, conv_ell_y, conv_ell_dx, conv_ell_dy = convergence_region_params
 

@@ -1,7 +1,15 @@
+""" Module containing the implementation of the procedure required to parse the command line arguments """
+
 import argparse
 
 
 def parse_args():
+    """
+    Helper function to parse the command line arguments of the script in order to set the chosen program settings
+
+    :returns: program settings, dictionary {command line argument: value}
+    """
+
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument('--data_dir', default='./data/', help='Directory where datasets are stored.')
     parser.add_argument('--results_dir', default='./results/', help='Directory where log files are stored.')

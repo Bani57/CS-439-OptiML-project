@@ -1,12 +1,41 @@
+""" Module containing code required to instantiate the shallow and deep model """
+
 from torch import nn
 from torch.nn import functional as F
 
 
 def create_circle_classifier():
+    """
+    Function to instantiate a three-layer MLP with 32 hidden units, to serve as the 2D circle classifier
+
+    :returns: circle classifier, torch.nn.Sequential object
+    """
+
     return nn.Sequential(nn.Linear(2, 32), nn.ReLU(), nn.Linear(32, 2), nn.Sigmoid())
 
 
 class MnistClassifier(nn.Module):
+    """
+    Class for the MNIST and FashionMNIST classifier, inherits torch.nn.Module
+    Network architecture:
+        1. 2D convolution of the input with a kernel size of 3x3 into 16 output channels
+        2. 2D max-pooling of the convolution output with a kernel size of 2x2
+        3. ReLU activation
+        4. Batch normalization
+        5. 2D convolution with a kernel size of 4x4 into 32 output channels
+        6. 2D max-pooling of the convolution output with a kernel size of 2x2
+        7. ReLU activation
+        8. Batch normalization
+        9. 2D convolution with a kernel size of 5x5 into 64 output channels
+        10. ReLU activation
+        11. Batch normalization
+        12. Fully connected layer with 256 output units
+        13. ReLU activation
+        14. Batch normalization
+        15. Fully connected layer with 10 output units
+        16. ReLU activation
+    """
+
     def __init__(self, mini_batch_size):
         nn.Module.__init__(self)
         self.mini_batch_size = mini_batch_size
